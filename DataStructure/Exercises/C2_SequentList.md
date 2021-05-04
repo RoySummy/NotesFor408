@@ -241,3 +241,101 @@ void ReverseList(LinkList& head)
 }
 ```
 
+## 查找快慢指针公共结点
+存在公共结点即从某一结点开始,他们的next域都指向同一个结点,拓扑结构为Y
+>解法: 考虑到如果有一个公共结点,那么这个公共结点之后的所有节点都是重合的, 也就是他们的最后一个结点必然是重合的
+>所以考虑让两个链表同时往前遍历, 只要最后一个结是相同的,那么就存在公共结点, 但是链表长度可能不同, 所以想到使用快慢指针, 心里有数了, 接下来写代码
+```c++
+/// 暴力解决的时间复杂度为 O(mn)
+/// 时间复杂度 O(m+n) m,n分别代表两个链表的长度
+/// <summary>
+/// 查找第一个公共结点
+/// </summary>
+/// <param name="list1">链表1</param>
+/// <param name="list2">链表2</param>
+/// <returns>如果存在公共结点则返回第一个公共结点,否则返回NULL</returns>
+LinkList SearchCommonNode(LinkList list1, LinkList list2)
+{
+	int len1 = Length(list1);
+	int len2 = Length(list2);
+	LinkList lList, sList;
+	int dist = 0;
+	if (len1 > len2)
+	{
+		lList = list1->next;
+		sList = list2->next;
+		dist = len1 - len2;
+	}
+	else
+	{
+		lList = list2->next;
+		sList = list1->next;
+		dist = len2 - len1;
+	}
+
+	while ((dist--) > 0)
+	{
+		lList = lList->next;
+	}
+
+	while (lList != NULL)
+	{
+		if (lList == sList)
+			return lList;
+		lList = lList->next;
+		sList = sList->next;
+	}
+
+	return NULL;
+}
+```
+## 删除升序链表中的重复元素
+错误原因：没有看到是有序链表，使用了map作为辅助空间，空间复杂度大了
+```c++
+//使用map的解法,同样适用于无序链表
+void DeleteDuplication(LinkList& head)
+{
+	unordered_map<int, int> mp;
+	Node* cur = head->next;
+	Node* pre = head;
+	while (cur != NULL)
+	{
+		Node* p = cur;
+		cur = cur->next;
+		mp[p->data]++;
+		if (mp[p->data] > 1)
+		{
+			pre->next = pre->next->next;
+			delete p;
+		}
+		else
+		{
+			pre = p;
+		}
+	}
+}
+
+/// <summary>
+/// 使用两个指针,一个指向当前遍历到的结点,一个指向当前结点的下一个结点,
+/// 如果两个值相等, 就删除当前结点的下一个结点
+/// </summary>
+/// <param name="head"></param>
+void DeleteDuplication(LinkList& head)
+{
+	Node* cur = head->next;
+	Node* next;
+	if (cur == NULL) return;
+	while (cur->next != NULL)
+	{
+		next = cur->next;
+		if (next->data == cur->data)
+		{
+			cur->next = next->next;
+			delete next;
+		}
+		else cur = cur->next;
+	}
+}
+```
+
+
