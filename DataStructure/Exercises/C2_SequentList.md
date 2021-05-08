@@ -241,7 +241,7 @@ void ReverseList(LinkList& head)
 }
 ```
 
-## 查找快慢指针公共结点
+## 6. 查找快慢指针公共结点
 存在公共结点即从某一结点开始,他们的next域都指向同一个结点,拓扑结构为Y
 >解法: 考虑到如果有一个公共结点,那么这个公共结点之后的所有节点都是重合的, 也就是他们的最后一个结点必然是重合的
 >所以考虑让两个链表同时往前遍历, 只要最后一个结是相同的,那么就存在公共结点, 但是链表长度可能不同, 所以想到使用快慢指针, 心里有数了, 接下来写代码
@@ -289,7 +289,7 @@ LinkList SearchCommonNode(LinkList list1, LinkList list2)
 	return NULL;
 }
 ```
-## 删除升序链表中的重复元素
+## 7. 删除升序链表中的重复元素
 错误原因：没有看到是有序链表，使用了map作为辅助空间，空间复杂度大了
 ```c++
 //使用map的解法,同样适用于无序链表
@@ -338,4 +338,52 @@ void DeleteDuplication(LinkList& head)
 }
 ```
 
+## 8. 同[查找公共结点]
+
+假定采用带头结点的单链表保存单词, 当两个单词有相同的后缀时, 可共享相同的后缀存储空间, 例如"loading" 和"being" 的存储映像如下图所示
+![](Images/2021-05-08-21-40-18.png)
+
+str1和str2分别指向头结点， 链表结点结构为 [data,next], 请设计一个时间上尽可能高效的算法，找出由str1和str2所指向两个链表共同后缀的起始位置
+
+```c++
+int Length(List head)
+{
+	Node* cur = head->next;
+	int len = 0;
+	while (cur != NULL)
+	{
+		len++;
+		cur = cur->next;
+	}
+	return len;
+}
+Node* FindCommonStart(Node* str1, Node* str2)
+{
+	int len1 = Length(str1);
+	int len2 = Length(str2);
+	Node* srt, * lng;	//srt for short; lng for long
+	int step;
+	if (len1 < len2)
+	{
+		step = len2 - len1;
+		srt = str1->next;
+		lng = str2->next;
+	}
+	else
+	{
+		step = len1 - len2;
+		srt = str2->next;
+		lng = str1->next;
+	}
+	while (step--)
+		lng = lng->next;
+	while (srt != NULL)
+	{
+		if (srt == lng)return srt;
+		srt = srt->next;
+		lng = lng->next;
+	}
+	return NULL;
+}
+```
 
