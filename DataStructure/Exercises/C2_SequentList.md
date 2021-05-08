@@ -387,3 +387,93 @@ Node* FindCommonStart(Node* str1, Node* str2)
 }
 ```
 
+## 9. 查找单链表环的位置(快慢指针)
+
+设计一个算法完成以下功能：判断一个链表是否有环，如果有，找出环的入口点并返回，否则返回NULL
+
+[分析]
+
+设置快慢指针分别为fast和slow，初始时都指向头结点head，slow走一步，fast走两步，由于fast比slow走的快，如果有环，那么fast一定先入环，而slow后入环。当两个指针都入环后，经过若干操作后两个指针一定能在环内相遇，以此判断是否有环
+
+如下图，当slow刚入环的时候，fast早已入环，因为fast每次都比slow多走一步，因此fast和slow相遇时，slow所走的距离不超过环的长度
+![](Images/2021-05-08-23-41-56.png)
+
+1. 环的长度为r
+
+2. 相遇点到入口的距离为x
+
+3. 慢指针走了 a+x步
+4. 快指针走了 2(a+x)步
+5. 设快指针已经在环中转了n圈
+
+有 2(a+x) = n*r + a + x
+
+=> a = n * r -x
+
+因此有head到环入口的距离a = (n-1)*r +(r-x)
+
+设置两个指针，一个指向head，另一个指向 r-x 的位置，也就是快慢指针的相遇点，两个指针相遇在环的入口，返回其中一个指针即可。
+
+```c++
+Node* ExistCircle(LinkList& head)
+{
+	Node* fast = head, * slow = head;
+	while (fast->next != NULL && slow != NULL)
+	{
+		slow = slow->next;
+		fast = fast->next->next;
+		if (slow == fast) break;	//快慢指针相遇
+	}
+	if (slow == NULL || fast == NULL)
+		return NULL;	//没有环
+	Node* p = head, * p2 = slow;	//分别指向开始点和相遇点
+	while (p != p2)
+	{
+		p = p->next;
+		p2 = p2->next;
+	}
+	return p;
+}
+```
+
+## 10. 重新排列单链表(快慢指针)
+
+假设线性表L = {a1, a2, a3, ..., an-2, an-1, an}采用带头结点的单链表保存，设计一个空间复杂度为O(1)且时间上尽可能高校的算法，重新排列L中的各个结点，达到线性表L' = {a1, an, a2, an-1, a3, an-2, ...}
+
+[分析] 考虑不能使用辅助空间，找到链表中间节点，然后将后半段逆置，在将后半段依次插入该插入的位置即可
+
+```c++
+void Rearrange(LinkList& head)
+{
+	Node* fast = head->next;
+	Node* slow = head->next;
+	while (fast->next != NULL)
+	{
+		fast = fast->next;
+		slow = slow->next;
+		if (fast->next != NULL) fast = fast->next;
+	}
+	Node* cur = slow->next;
+	slow->next = NULL;
+	while (cur != NULL)
+	{
+		Node* p = cur;
+		cur = cur->next;
+		p->next = slow->next;
+		slow->next = p;
+	}
+
+	cur = slow->next;
+	slow->next = NULL;
+	Node* p = head->next;
+	while (cur != NULL)
+	{
+		Node* t = cur;
+		cur = cur->next;
+		t->next = p->next;
+		p->next = t;
+		p = p->next->next;
+	}
+}
+```
+
