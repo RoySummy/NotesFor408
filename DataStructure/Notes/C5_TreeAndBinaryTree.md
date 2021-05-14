@@ -196,3 +196,4 @@ typedef struct BiTNode
     //struct BiTNode* parent; //如果需要频繁找父亲节点就可以加上这行，叫三叉链表
 }BiTNode,*BiTree;
 ```
+
