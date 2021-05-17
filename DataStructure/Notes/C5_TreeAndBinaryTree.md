@@ -197,3 +197,247 @@ typedef struct BiTNode
 }BiTNode,*BiTree;
 ```
 
+## 二叉树的遍历
+
+### 先序
+
+```c++
+void PreOrder(BiTree root)
+{
+	if (root == NULL)	//越界代偿
+		return;
+	cout << root->data << endl;
+	PreOrder(root->left);
+	PreOrder(root->right);
+}
+```
+
+### 中序
+
+```c++
+void InOrder(BiTree root)
+{
+	if (root == NULL)
+		return;
+	InOrder(root->left);
+	cout << root->data<<endl;
+	InOrder(root->right);
+}
+```
+
+### 后序
+
+```c++
+void PostOrder(BiTree root)
+{
+	if (root == NULL)
+		return;
+	PostOrder(root->left);
+	PostOrder(root->right);
+	cout << root->data << endl;
+}
+```
+
+### 层序遍历
+
+算法思想：
+
+1. 初始化一个队列
+2. 根结点入队
+3. 若队列非空，则队头结点出队，访问该结点，并将其左右孩子插入队尾(如果有的话)
+4. 重复3，直至队列为空
+
+```c++
+void LayerByLayer(BiTree root)
+{
+	if (root == NULL) return;
+	queue<BiTNode*> q;
+	q.push(root);
+	while (!q.empty())
+	{
+		BiTNode* node = q.front();
+		q.pop();
+		cout << node->data << endl;
+		if (node->left != NULL) q.push(node->left);
+		if (node->right != NULL) q.push(node->right);
+	}
+}
+```
+
+### 求树深度
+
+```c++
+int TreeDepth(BiTree root)
+{
+	if (root == NULL)
+		return 0;
+	else
+	{
+		int l = TreeDepth(root->left);
+		int r = TreeDepth(root->right);
+		return l > r ? l + 1 : r + 1;
+	}
+}
+```
+
+## 由遍历序列构造二叉树
+
+### 任意一个序列不能唯一确定二叉树
+![](Images/2021-05-17-20-26-53.png)
+![](Images/2021-05-17-20-28-10.png)
+![](Images/2021-05-17-20-28-30.png)
+![](Images/2021-05-17-20-28-44.png)
+
+### 可以确定二叉树的序列
+
+![](Images/2021-05-17-20-29-40.png)
+
+#### 前序+中序
+
+![](Images/2021-05-17-20-40-31.png)
+
+例如 前序序列为：ADBCE 中序序列为：BDCAE
+
+首先看前序序列第一个是A，对应中序，因此树的根结点为A，左子树为BDC右子树为E
+![](Images/2021-05-17-20-42-19.png)
+
+继续看前序序列，第一个是D，故左子树的根结点为D
+![](Images/2021-05-17-20-43-14.png)
+
+#### 后序+中序
+
+![](Images/2021-05-17-20-43-54.png)
+
+例如：后序序列为：E F A H C I G B D，中序序列为：E A F D H C B G I
+
+首先看后序序列最后一个是D，所以将中序序列以D为根，左右分成两棵子树
+
+![](Images/2021-05-17-20-46-30.png)
+
+然后看后序中的EFA, A在最后,故A为根, 因此将中序序列中的EAF按A为根分为左右两棵子树
+![](Images/2021-05-17-20-47-55.png)
+依此类推$\cdots$
+最终结果为
+![](Images/2021-05-17-20-48-49.png)
+
+#### 层序+中序
+![](Images/2021-05-17-20-49-09.png)
+例如：层序序列为：D A B E F C G H I，中序序列为：E A F D H C B G I
+
+层序序列第一个为D，因此将中序序列以D为根结点分为左右两棵子树
+![](Images/2021-05-17-20-50-16.png)
+
+层序序列第二个访问到A，因此以A为根结点，将EAF分为左右子树
+
+依此类推
+
+![](Images/2021-05-17-20-51-28.png)
+
+## 线索二叉树
+
+### 作用
+
+普通二叉树找前驱、后继很不方便；遍历操作必须从根结点开始
+
+### 存储结构
+
+```c++
+typedef struct ThreadNode
+{
+	ElemType data;
+	struct ThreadNode* left, * right;
+	int lTag, rTag;	//左右线索标志，1时left、right指向前驱/后继
+}ThreadNode, *ThreadTree;
+```
+
+ ### 线索化
+
+易错点：最后一个结点rtag的处理，先序线索化中会出现死循环的情况
+
+```c++
+ThreadNode* pre = NULL;	//全局变量，用于记录当前访问结点的前驱
+
+void Visit(ThreadNode* q)
+{
+	if (q->left == NULL)	//当前结点左子树为空，建立前驱
+	{
+		q->left = pre;
+		q->lTag = 1;
+	}
+	if (pre != NULL && pre->right == NULL)	//前驱结点右子树为空，建立后继
+	{
+		pre->right = q;
+		pre->rTag = 1;
+	}
+	pre = q;
+}
+
+#pragma region 中序线索化
+
+void InThread(ThreadTree root)
+{
+	if (root == NULL)
+		return;
+	InThread(root->left);
+	Visit(root);
+	InThread(root->right);
+}
+
+void CreateInThread(ThreadTree T)
+{
+	pre = NULL;
+	if (T != NULL)
+	{
+		InThread(T);
+		if (pre->right == NULL)
+			pre->rTag = 1;	//处理遍历的最后一个结点
+	}
+}
+#pragma endregion
+
+#pragma region 先序线索化
+void PreThread(ThreadTree T)
+{
+	if (T == NULL) return;
+	Visit(T);
+	if (T->lTag == 0)	//因为是先visit，所以当遍历到最左边的结点时会让它指向前驱，然后就会产生无线循环
+		PreThread(T->left);
+	PreThread(T->right);
+}
+
+void CreatePreThread(ThreadTree T)
+{
+	pre = NULL;
+	if (T != NULL)
+	{
+		PreThread(T);
+		if (pre->right == NULL)//处理遍历的最后一个结点
+			pre->rTag = 1;
+	}
+}
+#pragma endregion
+
+#pragma region 后序线索化
+void PostThread(ThreadTree T)	
+{
+	//因为是先左右孩子，再根结点，因此在visit当前结点创建线索之后不会在访问左右孩子，故不会出现先序中无限循环的情况
+	if (T == NULL)
+		return;
+	PostThread(T->left);
+	PostThread(T->right);
+	Visit(T);
+}
+
+void CreatePostThread(ThreadTree T)
+{
+	pre = NULL;
+	if (T != NULL)
+	{
+		PostThread(T);
+		if (pre->right != NULL)	//处理遍历的最后一个结点
+			pre->rTag = 1;
+	}
+}
+#pragma endregion
+```
+
