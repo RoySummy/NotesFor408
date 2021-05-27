@@ -231,3 +231,342 @@ $\begin{pmatrix}
 其中$a_{1,2}a_{2,4} = 1 * 1 = 1$代表的意思是从A到B有一条边，从B到D有一条边，故从A到D的距离为2的边有一条是A->B->D；如果其中有一条边为0，那么乘积的结果就是0，也就是没有边；
 
 同理可以推算到$A^n[i][j]$就代表从i结点到j结点长度为n的路径的数目
+
+### 邻接表法
+
+#### 结点定义
+
+```c++
+typedef struct ArcNode	//边
+{
+	int adjVex;			//边指向哪个结点
+	struct ArcNode* next;	//指向下一条弧的指针
+}ArcNode;
+
+typedef struct VNode	//顶点
+{
+	VertexType data;	
+	ArcNode* first;		//第一条边
+}VNode, AdjList[MaxVertexNum];
+
+typedef struct			//用邻接表存储的图
+{
+	AdjList vertices;
+	int vexNum, arcNum;
+}ALGraph;
+```
+
+![](Images/2021-05-27-19-19-13.png)
+
+> 表格中存的是顶点，而链表中的是与顶点相连的边。
+
+#### 性能分析
+
+> 对于无向图而言
+>
+> 1. 边结点的数量是2|E|， 整体空间复杂度为 O(|V| + 2|E|)
+> 2. 求度将对应结点的链表遍历计数即可
+>
+> 
+>
+> 对于有向图而言
+>
+> 1. 边结点的数量是|E|， 整体空间复杂度为 O(|V| + |E|)
+> 2. 出度遍历对应结点的链表即可，入度需遍历整个表
+
+#### 与邻接矩阵对比
+
+![](Images/2021-05-27-19-29-14.png)
+
+### 十字链表法和邻接多重表
+
+#### 十字链表法(适用于有向图)
+
+引出：对于有向图而言，如果用邻接表来存储，查顶点的入度不方便；而如果使用邻接矩阵来存储的话空间复杂度又太高，因此就有了十字链表法这种存储方法
+
+```c++
+typedef int Weight;
+
+typedef struct CArcNode	//十字链表法弧结点定义
+{
+	int tailVex;	//弧尾顶点编号
+	int headVex;	//弧头顶点编号
+	// Weight weight;	//权值
+	struct CArcNode* hLink;	//弧头相同的下一条弧
+	struct CArcNode* tLink;	//弧尾相同的下一条弧
+}CArcNode;
+
+typedef struct CVNode	//十字链表法顶点结点定义
+{
+	VertexType data;
+	CArcNode* firstIn;	//该顶点作为弧头的第一条弧
+	CArcNode* firstOut;	//该顶点作为弧尾的第一条弧
+}CVNode, CrossList[MaxVertexNum];
+
+typedef struct
+{
+	CrossList vertices;
+	int vexNum, arcNum;
+}CrossGraph;
+```
+![](Images/2021-05-27-19-47-15.png)
+
+> 从一个顶点开始，找所有出边，就是按着绿色的指针一直找。
+
+#### 一些性质
+
+1. 空间复杂度：O(|V|+|E|)
+2. 如何找到指定顶点的所有出边？——顺着绿色线路找 
+3. 如何找到指定顶点的所有入边？——顺着橙色线路找
+
+#### 邻接多重表(适用于无向图)
+
+引出：对于无向图而言，如果使用邻接表来存储，会导致每条边对应两份冗余信息， 删除顶点、删除边等操作 时间复杂度高；如果使用邻接矩阵来存储，空间复杂度太高。
+
+![](Images/2021-05-27-19-52-52.png)
+
+#### 一些性质
+
+1. 空间复杂度：O(|V|+|E|) //每条边对应一份数据
+2. 删除边、删除节点等操作很方便
+
+### 总结
+
+![](Images/2021-05-27-19-54-50.png)
+
+## 遍历
+
+### 需要准备的接口
+
+1. FirstNeighbor(G,x)
+
+    求图G中顶点x的第⼀个邻接点，若有则返回顶点号。 若x没有邻接点或图中不存在x，则返回-1。
+
+2. NextNeighbor(G,x,y)
+
+    假设图G中顶点y是顶点x的⼀个邻接点，返回除y之外 顶点x的下⼀个邻接点的顶点号，若y是x的最后⼀个邻接点，则返回-1
+
+### BFS
+
+#### 要点
+
+1. 找到与⼀个顶点相邻的所有顶点 
+2. 标记哪些顶点被访问过
+3. 需要⼀个辅助队列
+
+#### 代码
+
+```c++
+void BFS(Graph G, int v)
+{
+	queue<int> q;	//辅助队列
+	VisitGraphNode(v);	//访问结点
+	visited[v] = true;	//标记已经访问过
+	q.push(v);			
+	while (!q.empty())
+	{
+		v = q.front();
+		q.pop();
+       	//找到与结点相连的所有结点，访问并入队
+		for (int w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w))
+		{
+			if (!visited[w])
+			{
+				VisitGraphNode(w);
+				visited[w] = true;
+				q.push(w);
+			}
+		}
+	}
+}
+```
+
+>  【注】
+>
+> ​	同⼀个图的邻接矩阵表示⽅式唯⼀，因此⼴度优先遍历序列唯⼀
+>
+> ​	同⼀个图邻接表表示⽅式不唯⼀，因此⼴度优先遍历序列不唯⼀
+
+#### 完整代码
+
+如果图是非连通图，那么依次BFS不能够完整地遍历整个图，需要增加逻辑
+
+![](Images/2021-05-27-21-18-42.png)
+
+```c++
+bool visited[MaxVertexNum];
+
+void BFS(Graph G, int v)
+{
+	queue<int> q;	//辅助队列
+	VisitGraphNode(v);	//访问结点
+	visited[v] = true;	//标记已经访问过
+	q.push(v);
+	while (!q.empty())
+	{
+		v = q.front();
+		q.pop();
+        //找到与结点相连的所有结点，访问并入队
+		for (int w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w))
+		{
+			if (!visited[w])
+			{
+				VisitGraphNode(w);
+				visited[w] = true;
+				q.push(w);
+			}
+		}
+	}
+}
+
+void BFSTraverse(Graph G)
+{
+	for (int i = 0; i < G.vexNum; i++)
+		visited[i] = false;
+	for (int i = 0; i < G.vexNum; i++)
+	{
+        //如果一次BFS没有把图中所有的结点遍历完，则从第一个没有访问过的结点再来一次BFS，直到访问完整个图
+		if (!visited[i])	
+			BFS(G, i);
+	}
+}
+```
+
+> 结论：对于无向图而言，==调用BFS函数的次数等于连通分量数==
+
+#### 复杂度分析
+
+##### 空间复杂度
+
+最坏情况，辅助队列⼤⼩为 O(|V|)
+
+![](Images/2021-05-27-21-24-51.png)
+
+##### 时间复杂度
+
+1. 邻接矩阵存储的图
+
+    访问 |V| 个顶点需要O(|V|)的时间
+
+    查找每个顶点的邻接点都需要O(|V|)的时间，⽽总共有|V|个顶点
+
+    时间复杂度= O(|V|2)
+
+2. 邻接表存储的图
+
+    访问 |V| 个顶点需要O(|V|)的时间
+
+    查找各个顶点的邻接点共需要O(|E|)的时间，	//对于无向图而言其实是 2|E|
+
+    时间复杂度= O(|V|+|E|)
+
+#### 广度优先生成树
+
+在遍历过程中，通过当前结点压入队列的所有结点当作当前结点的孩子，就得到了树(无环)
+
+对于下图而言，从2开始进行广搜的生成树就是右边的结果
+
+![](Images/2021-05-27-21-29-36.png)
+
+> ⼴度优先⽣成树由⼴度优先 遍历过程确定。由于邻接表 的表示⽅式不唯⼀，因此基 于邻接表的⼴度优先⽣成树 也不唯⼀。
+
+#### 广度优先生成森林
+
+对⾮连通图的⼴度优先遍历，可得到⼴度优先⽣成森林
+
+![](Images/2021-05-27-21-31-17.png)
+
+#### 总结
+
+![](Images/2021-05-27-21-32-00.png)
+
+### DFS
+
+#### 代码
+
+```c++
+bool visited[MaxVertexNum];
+
+void DFS(Graph G, int v)
+{
+	VisitGraphNode(v);
+	visited[v] = true;
+	for (int w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w))
+	{
+		if (!visited[w])	//优先往深处探索
+			DFS(G, w);
+	}
+}
+```
+
+> 【注】
+>
+> 同⼀个图的邻接矩阵表示⽅式唯⼀，因此深度优先遍历序列唯⼀，深度优先⽣成树也唯⼀
+>
+> 同⼀个图邻接表表示⽅式不唯⼀，因此深度优先遍历序列不唯⼀，深度优先⽣成树也不唯⼀
+
+#### 完整代码
+
+同样存在与BFS同样的问题，如果图是非连通图，则一次DFS无法访问整个图，处理方法也类似
+
+```c++
+bool visited[MaxVertexNum];
+
+void DFS(Graph G, int v)
+{
+	VisitGraphNode(v);
+	visited[v] = true;
+	for (int w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w))
+	{
+		if (!visited[w])	//优先往深处探索
+			DFS(G, w);
+	}
+}
+
+void DFSTraverse(Graph G)
+{
+	for (int i = 0; i < G.vexNum; i++)
+		visited[i] = false;
+	for (int i = 0; i < G.vexNum; i++)
+		if (!visited[i])
+			DFS(G, i);
+}
+```
+
+#### 复杂度分析
+
+##### 空间复杂度
+
+主要来自递归调用栈
+
+![](Images/2021-05-27-21-41-08.png)
+
+##### 时间复杂度
+
+1. 邻接矩阵存储
+
+    访问 |V| 个顶点需要O(|V|)的时间
+
+    查找每个顶点的邻接点都需要O(|V|)的时间，⽽总共有|V|个顶点
+
+    时间复杂度= ==O(|V|2)==
+
+2. 邻接表存储的图：
+
+    访问 |V| 个顶点需要O(|V|)的时间
+
+    查找各个顶点的邻接点共需要O(|E|)的时间
+
+    时间复杂度= O(|V|+|E|)
+
+#### 深度优先生成树
+
+在遍历过程中，通过当前结点访问到的结点成为当前结点的孩子，也就成了树(无环)
+
+#### 深度优先生成森林
+
+对于非连通图而言，每一个连通分量的生成树共同组成了生成森林
+
+### 总结
+
+![](Images/2021-05-27-21-46-49.png)
