@@ -85,3 +85,42 @@ A. 3		B. 4		C. 5		D. 6
 > 错选B
 >
 > 【分析】满足条件的三叉树是完全三叉树，这棵树的第$i(i\ge1)$层最多有$3^{i-1}$个结点，设高度为h，则有$3^0+3^1+\cdots+3^h-1=\frac{3^h-1}{2}$是结点数的上限=> $50\le\frac{3^h-1}{2} => h\ge log_3101$，有$h=\lceil log_3101\rceil=5$
+
+
+
+## 二叉树
+
+### 递推实现后序遍历
+
+```c++
+/// 思路：使用两个栈，stack1 和 stack2
+/// 1、将root 压入stack1
+/// 2、当stack1中有元素时
+/// 	取出stack1栈顶元素node，压入stack2
+///		检测弹出的node左右结点，按先左后右的顺序压入stack1
+/// 3、最后得到的stack2，依次弹栈就是后序序列
+
+void PostOrderTraversal(BiTree root)
+{
+	stack<Node*> stack1, stack2;
+	stack1.push(root);
+	while (!stack1.empty())
+	{
+		Node* node = stack1.top();
+		stack1.pop();
+		stack2.push(node);
+		if (node->left)
+			stack1.push(node->left);
+		if (node->right)
+			stack1.push(node->right);
+	}
+	while (!stack2.empty())
+	{
+		cout << stack2.top()->data << endl;
+		stack2.pop();
+	}
+}
+```
+
+
+
