@@ -711,7 +711,7 @@ void BFS_Min_Distance(Graph g, int entry)
 >
 > 通式：
 >
-> $A^{-1}=邻接矩阵, path{-1}=[-1]$
+> $A^{-1}=邻接矩阵, path^{-1}=[-1]$
 >
 > 若 $A^{k-1}[i][j]>A^{k-1}[i][k]+A^{k-1}[k][j]$
 >
